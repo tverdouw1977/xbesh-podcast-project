@@ -60,8 +60,22 @@ const CreatePodcast: React.FC = () => {
         const bucketExists = buckets?.some(bucket => bucket.name === 'podcast-covers');
         
         if (!bucketExists) {
-          console.log('Bucket does not exist. Please create the "podcast-covers" bucket in the Supabase dashboard.');
-          setError('Storage bucket "podcast-covers" not found. Please contact the administrator to set up storage.');
+          console.log('Bucket does not exist. Creating "podcast-covers" bucket...');
+          
+          // Try to create the bucket directly from the client
+          const { error: createError } = await supabase.storage.createBucket('podcast-covers', {
+            public: true,
+            fileSizeLimit: 5242880, // 5MB
+          });
+          
+          if (createError) {
+            console.error('Error creating bucket:', createError);
+            setError('Failed to create storage bucket. Please contact the administrator.');
+            return;
+          }
+          
+          console.log('Bucket created successfully');
+          setBucketReady(true);
           return;
         }
         
